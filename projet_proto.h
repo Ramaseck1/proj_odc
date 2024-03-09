@@ -8,6 +8,7 @@ typedef struct
     char email[Max_taille];
     char mdp[Max_taille];
     char role[Max_taille];
+    int code;
 
     
 }CONNEXION;
@@ -18,8 +19,9 @@ typedef struct {
 typedef struct {
     char nom[Max_taille];
     char prenom[Max_taille];
-    char mdp[Max_taille];
+    int code;
     int age;
+
     int present; // Champ de présence
 } ETUDIANT;
 

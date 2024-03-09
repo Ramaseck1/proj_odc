@@ -66,7 +66,6 @@ int verifier_connexion(char *email, char *mot_de_passe, char *role, char *nomfic
     fclose(fichier);
     return 0; // Échec de la connexion
 }
-
 CONNEXION saisir_connexion(void) {
     CONNEXION c;
     printf("Entrer un email : ");
@@ -108,7 +107,7 @@ int recuperer_liste_etudiants(ETUDIANT *e,char *nomfichier) {
     FILE *fichier = fopen("test.txt", "r");
     if (fichier == NULL) {
         printf("Erreur lors de l'ouverture du fichier %s.\n", "test.txt");
-        return 0;
+    "éa"    return 0;
     }
 
     int nb_etudiants = 0;
@@ -121,31 +120,27 @@ int recuperer_liste_etudiants(ETUDIANT *e,char *nomfichier) {
 } */
 
 // marquer presence (admin)
-
-
-void marquer_presence_admin(void) {
+ 
+/* void marquer_presence_admin(int code) {
     printf("=== Marquer la présence d'un apprenant ===\n");
-
-    char mot_de_passe[Max_taille];
-    printf("Veuillez entrer le mot de passe de l'étudiant : ");
-    fflush(stdout);
-    mdp(mot_de_passe);
+    
 
     // Récupérer la liste des apprenants depuis le fichier
     ETUDIANT etudiants[Max_taille];
+    int nb_etudiants = recuperer_liste_etudiants(etudiants, "test.txt");
 
-    // Vérifier si le mot de passe correspond à celui d'un étudiant existant
-    int index_etudiant = -1; //  initialisé à -1 pour indiquer aucune correspondance
-   /*  for (int i = 0; i < nb_etudiants; i++) {
-        if (strcmp(mot_de_passe, etudiants[i].mdp) == 0) {
-            index_etudiant = i; // Enregistrer l'indice de l'étudiant correspondant au mot de passe
+    // Vérifier si le code correspond à celui d'un étudiant existant
+    int index_etudiant = -1; // Initialisé à -1 pour indiquer aucune correspondance
+    for (int i = 0; i < nb_etudiants; i++) {
+        if (code == etudiants[i].code) {
+            index_etudiant = i; // Enregistrer l'indice de l'étudiant correspondant au code
             break; 
         }
-    } */
+    } 
 
-    // Vérifier si un étudiant correspondant au mot de passe a été trouvé
+     //Vérifier si un étudiant correspondant au code a été trouvé
     if (index_etudiant == -1) {
-        printf("Aucun étudiant trouvé avec ce mot de passe.\n");
+        printf("Aucun étudiant trouvé avec ce code.\n");
         return;
     }
 
@@ -162,11 +157,88 @@ void marquer_presence_admin(void) {
     printf("L'étudiant a été marqué présent à : %s\n", temps_format);
 
     // Marquer la présence de l'étudiant avec le temps actuel
-    FILE *journal = fopen("marquer_presence.txt", "a");
+    FILE *journal = fopen("test.txt", "a");
     if (journal != NULL) {
         fprintf(journal, "%s %s - Présent à %s\n", etudiants[index_etudiant].prenom, etudiants[index_etudiant].nom, temps_format);
         fclose(journal);
     } else {
         printf("Erreur lors de l'ouverture du journal de présence.\n");
     }
+} 
+ */
+
+void marquer_presence(char *code_etudiant, char *nomfichier) {
+    FILE *fichier = fopen(nomfichier, "r");
+    if (fichier == NULL) {
+        printf("Erreur lors de l'ouverture du fichier %s.\n", nomfichier);
+        return;
+    }
+
+    char nom[Max_taille];
+    char code[Max_taille];
+    char name[Max_taille];
+    int apprenant_present = 0; 
+
+    // Vérifie si l'étudiant est déjà présent dans la liste
+    while (fscanf(fichier, "%s %s %s", name, nom, code) == 3) {
+        if (strcmp(code, code_etudiant) == 0) {
+            fclose(fichier);
+            time_t rawtime;
+            struct tm *timeinfo;
+            time(&rawtime);
+            timeinfo = localtime(&rawtime);
+            printf("%s %s est présent à %s", name, nom, asctime(timeinfo));
+
+            // Vérifie si l'étudiant est déjà présent dans la liste de présences
+            FILE *fichier_presence = fopen("liste_presences.txt", "r");
+            if (fichier_presence == NULL) {
+                printf("Erreur lors de l'ouverture du fichier liste_presences.txt.\n");
+                return;
+            }
+
+            char existing_code[Max_taille];
+            while (fscanf(fichier_presence, "%s", existing_code) != EOF) {
+                if (strcmp(existing_code, code_etudiant) == 0) {
+                    printf("%s %s est déjà présent dans la liste de présences.\n", name, nom);
+                    apprenant_present = 1;
+                    break;
+                }
+            }
+
+            fclose(fichier_presence);
+
+            // Si l'étudiant n'est pas déjà présent, l'ajoute à la liste des présences
+            if (!apprenant_present) {
+                FILE *fichier_presence_ajout = fopen("liste_presences.txt", "a");
+                if (fichier_presence_ajout == NULL) {
+                    printf("Erreur lors de l'ouverture du fichier liste_presences.txt pour ajout.\n");
+                    return;
+                }
+                fprintf(fichier_presence_ajout, "%s %s est présent à %s", name, nom, asctime(timeinfo));
+                fclose(fichier_presence_ajout);
+            }
+
+            return;
+        }
+    }
+
+    fclose(fichier);
+    printf("Code de l'étudiant invalide.\n");
+}
+
+
+void afficher_liste_presences() {
+    FILE *fichier = fopen("liste_presences.txt", "r");
+    if (fichier == NULL) {
+        printf("Erreur lors de l'ouverture du fichier des présences.\n");
+        return;
+    }
+
+    printf("Liste des présences :\n");
+    char ligne[Max_taille];
+    while (fgets(ligne, sizeof(ligne), fichier) != NULL) {
+        printf("%s", ligne);
+    }
+
+    fclose(fichier);
 }

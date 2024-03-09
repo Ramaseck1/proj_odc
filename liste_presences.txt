@@ -1,0 +1,9 @@
+234 Rama est present Fri Mar  8 13:31:56 2024
+214 khady est present   Fri Mar  8 13:46:13 2024
+213 Awa est present   Fri Mar  8 13:46:45 2024
+234 Rama est present   Sat Mar  9 12:05:15 2024
+214 khady est présent à Sat Mar  9 13:54:37 2024
+213 Awa est présent à Sat Mar  9 13:54:57 2024
+234 Rama est présent à Sat Mar  9 13:57:21 2024
+321 fatou est présent à Sat Mar  9 14:27:43 2024
+432 fallou est présent à Sat Mar  9 14:29:50 2024
