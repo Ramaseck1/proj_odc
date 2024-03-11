@@ -4,6 +4,8 @@
 #include <time.h> // bibliothèque pour travailler avec le temps
 #include <termios.h> // marquer mot de passe
 #include <unistd.h> // bibliothèque pour STDIN_FILENO
+#include <locale.h> // Pour utiliser les formats de date/heure français
+
 
 #include "projet_proto.h"
 
@@ -177,7 +179,7 @@ void marquer_presence(char *code_etudiant, char *nomfichier) {
     char nom[Max_taille];
     char code[Max_taille];
     char name[Max_taille];
-    int apprenant_present = 0; 
+    int apprenant_present = 0;
 
     // Vérifie si l'étudiant est déjà présent dans la liste
     while (fscanf(fichier, "%s %s %s", name, nom, code) == 3) {
@@ -187,7 +189,11 @@ void marquer_presence(char *code_etudiant, char *nomfichier) {
             struct tm *timeinfo;
             time(&rawtime);
             timeinfo = localtime(&rawtime);
-            printf("%s %s est présent à %s", name, nom, asctime(timeinfo));
+
+            // Définir la locale française pour le format de date et d'heure
+            setlocale(LC_TIME, "fr_FR.utf8");
+
+            printf("%s %s est présent  %s", name, nom, asctime(timeinfo));
 
             // Vérifie si l'étudiant est déjà présent dans la liste de présences
             FILE *fichier_presence = fopen("liste_presences.txt", "r");
@@ -214,7 +220,12 @@ void marquer_presence(char *code_etudiant, char *nomfichier) {
                     printf("Erreur lors de l'ouverture du fichier liste_presences.txt pour ajout.\n");
                     return;
                 }
-                fprintf(fichier_presence_ajout, "%s %s est présent à %s", name, nom, asctime(timeinfo));
+
+                // Formater le temps en français
+                char time_str[Max_taille];
+                strftime(time_str, sizeof(time_str), "%A %d %B %Y à %H:%M:%S\n", timeinfo);
+
+                fprintf(fichier_presence_ajout, "%s %s est présent  %s\n", name, nom, time_str);
                 fclose(fichier_presence_ajout);
             }
 
@@ -225,8 +236,6 @@ void marquer_presence(char *code_etudiant, char *nomfichier) {
     fclose(fichier);
     printf("Code de l'étudiant invalide.\n");
 }
-
-
 void afficher_liste_presences() {
     FILE *fichier = fopen("liste_presences.txt", "r");
     if (fichier == NULL) {
@@ -241,4 +250,69 @@ void afficher_liste_presences() {
     }
 
     fclose(fichier);
+}
+
+// generer fichiers 
+
+
+void generer_fichier_toutes_dates() {
+    FILE *fichier_presences = fopen("liste_presences.txt", "r");
+    if (fichier_presences == NULL) {
+        printf("Erreur lors de l'ouverture du fichier liste_presences.txt.\n");
+        return;
+    }
+
+    FILE *fichier_toutes_dates = fopen("fichier_toutes_dates.txt", "w");
+    if (fichier_toutes_dates == NULL) {
+        printf("Erreur lors de l'ouverture du fichier fichier_toutes_dates.txt pour écriture.\n");
+        fclose(fichier_presences);
+        return;
+    }
+
+    char ligne[Max_taille];
+    char date[Max_taille];
+    char code[Max_taille];
+    char nom[Max_taille];
+    int date_deja_traitee = 0;
+
+    // Parcourir le fichier des présences pour obtenir toutes les dates uniques
+    while (fgets(ligne, sizeof(ligne), fichier_presences) != NULL) {
+        // Extraire la date de la ligne et la normaliser au format "JJ/MM/AAAA"
+        sscanf(ligne, "%*s %*s %s", date);
+        if (strlen(date) == 8) {
+            char temp[Max_taille];
+            sprintf(temp, "%s", date);
+            strcpy(date, temp);
+        }
+
+        // Vérifier si la date a déjà été traitée
+        rewind(fichier_toutes_dates);
+        while (fgets(ligne, sizeof(ligne), fichier_toutes_dates) != NULL) {
+            if (strstr(ligne, date) != NULL) {
+                date_deja_traitee = 1;
+                break;
+            }
+        }
+
+        if (!date_deja_traitee) {
+            fprintf(fichier_toutes_dates, "Date: %s\n", date);
+            fprintf(fichier_toutes_dates, "Code\tNom\n");
+
+            // Rechercher tous les apprenants présents à cette date
+            rewind(fichier_presences);
+            while (fgets(ligne, sizeof(ligne), fichier_presences) != NULL) {
+                if (strstr(ligne, date) != NULL) {
+                    sscanf(ligne, "%*s %s %s", code, nom);
+                    fprintf(fichier_toutes_dates, "%s\t%s\n", code, nom);
+                }
+            }
+            fprintf(fichier_toutes_dates, "\n");
+        }
+        date_deja_traitee = 0;
+    }
+
+    fclose(fichier_presences);
+    fclose(fichier_toutes_dates);
+    
+    printf("Le fichier  a été généré avec succès.\n");
 }
